@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <!-- 引入样式 -->
+    <link rel="stylesheet" href="style/style.css">
+
+    <style type="text/css" media="print">
+        .noprint {
+            display: none
+        }
+        
+        .print {
+            display: block !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <header class="el-header noprint">
+            <div class="icon-btns">
+                <i class="icon-list" @click="changeLeftMenu"></i>
+                <i class="icon-skip_previous" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('first')"></i>
+                <i class="icon-play_arrow prev-icon" v-bind:class="{'disabled': currentPage == 1}" @click="changeCurrentPage('prev')"></i>
+                <i class="icon-play_arrow" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('next')"></i>
+                <i class="icon-skip_next" v-bind:class="{'disabled': currentPage == pageNum}" @click="changeCurrentPage('last')"></i>
+                <select v-model="currentPage">
+                    <option v-for="page in pageNum" v-bind:value="page">page {{ page }}</option>
+                </select>
+                <i class="icon-zoom_in" v-bind:class="{'disabled': zoomNum == 2}" @click="modifyZoom('in')"></i>
+                <select v-model="zoomNum">
+                    <option value="0.5">50%</option>
+                    <option value="0.6">60%</option>
+                    <option value="0.7">70%</option>
+                    <option value="0.8">80%</option>
+                    <option value="0.9">90%</option>
+                    <option value="1.0" selected>100%</option>
+                    <option value="1.1">110%</option>
+                    <option value="1.2">120%</option>
+                    <option value="1.3">130%</option>
+                    <option value="1.4">140%</option>
+                    <option value="1.5">150%</option>
+                    <option value="1.6">160%</option>
+                    <option value="1.7">170%</option>
+                    <option value="1.8">180%</option>
+                    <option value="1.9">190%</option>
+                    <option value="2.0">200%</option>
+                </select>
+                <i class="icon-zoom_out" v-bind:class="{'disabled': zoomNum == 0.5}" @click="modifyZoom('out')"></i>
+                <i class="icon-format_align_left" @click="textAlign = 'left'"></i>
+                <i class="icon-format_align_center" @click="textAlign = 'center'"></i>
+                <i class="icon-format_align_right" @click="textAlign = 'right'"></i>
+                <i class="icon-print" @click="window.print()"></i>
+            </div>
+        </header>
+
+        <aside class="noprint" width="240px" v-show="ifMenuShow">
+            <nav class="tabNav">
+                <ul>
+                    <li v-bind:class="{ 'curr': currentNav == 0 }" @click="currentNav = 0">Page</li>
+                    <li v-bind:class="{ 'curr': currentNav == 1 }" @click="currentNav = 1">Bookmark</li>
+                </ul>
+
+                <div class="clear"></div>
+            </nav>
+
+            <div class="tab-conent scrollbar" v-bind:style="{ height: asideHeight + 'px' }">
+
+            <section v-show="currentNav == 0">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-file-text2"></i> page {{ page }}</li>
+                </ul>
+            </section>
+
+            <section v-show="currentNav == 1">
+                <ul class="page-menu">
+                    <li v-for="page in pageNum" v-bind:class="{ 'curr': currentPage == page }" @click="changePage(page)"><i class="icon-turned_in_not"></i> Bookmark {{ page }}</li>
+                </ul>
+            </section>
+        </div>
+
+        </aside>
+        <div class="main scrollbar noprint"  v-bind:style="{ height: mainHeight + 'px' }" v-bind:class="{ 'mainLeftM': ifMenuShow, 'aleft': textAlign === 'left','acenter': textAlign === 'center','aright': textAlign === 'right'}">
+            <div class="conent" v-html="pageContent" v-bind:style="zoomStyle"></div>
+
+            <div class="clear"></div>
+        </div>
+
+        <!--专门只为打印的内容-->
+        <div class="conent print" style="display:none" v-html="pageContent"></div>
+    </div>
+</body>
+<!-- 先引入 Vue -->
+<script src="js/vue.min.js"></script>
+<script>
+
+var app = new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                // visible: false,
+                isCollapse: false,
+                currentNav: 0,
+                activeName2: 'first',
+                pageNum: 1, 
+                currentPage: 1,
+                pageContent: '',
+                asideHeight: 300,
+                mainHeight: 300,
+                ifMenuShow: true,
+                zoomNum: '1.0',
+                textAlign: 'left',
+                zoomStyle: {},
+                pageDatas: ['<div style="position:absolute;top:42.533367px;left:31.666666px"><nobr><img height="971.000000" width="753.000000" src ="bgimg/bg00001.jpg"/></nobr></div><div style="position:absolute;top:1011.733276px;left:0.000000px"><nobr><img height="45.000000" width="816.000000" src ="bgimg/bg00002.jpg"/></nobr></div><div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="45.000000" width="816.000000" src ="bgimg/bg00003.jpg"/></nobr></div><div style="position:absolute;top:0.000000px;left:786.200012px"><nobr><img height="1056.000000" width="12.000000" src ="bgimg/bg00004.jpg"/></nobr></div><div style="position:absolute;top:0.000000px;left:18.199999px"><nobr><img height="1056.000000" width="12.000000" src ="bgimg/bg00005.jpg"/></nobr></div><p><span style="font-family:Times New Roman;font-size:14.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:48.760418px;left:48.160000px"><nobr>YAHYA MOHAMMED MUBARAK ALSHAHRANI </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:70.087486px;left:48.160000px"><nobr>Phone# +966-172244463 , 0555672344 E-mail: <a href="mailto:yahya412@yahoo.com">yahya412@yahoo.com </a></nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:102.911133px;left:48.160000px"><nobr>OBJECTIVE : </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:120.034180px;left:48.160000px"><nobr>To get associated with good, reputed, value based organization, where working comes as a challenge &amp; skills could be harnessed to </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:135.554123px;left:48.160000px"><nobr>upgrade my knowledge &amp; simultaneously achieve organization’s objectives in an efficient &amp; self-motivated manner. </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:168.991043px;left:48.160000px"><nobr>PERSONAL PROFILE: </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:186.114182px;left:48.160000px"><nobr>Currently performing developing an audio editing program using c language and ASTERISK open source project, also a specialist in Orac le 9i a </nobr></span><span style="position:absolute;top:201.154129px;left:48.160000px"><nobr>12c DBA for Network management, Database backup &amp; recovery, Security Management , knowledge in java Programming HTML, CSS , </nobr></span><span style="position:absolute;top:216.994141px;left:48.160000px"><nobr>JAVASCRIPT &amp; ORACLE APEX on Microsoft &amp; Red hat linux (RHCE) . </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:247.391113px;left:48.160000px"><nobr>EDUCATION PROFILE: </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:264.514160px;left:48.160000px"><nobr>High School : ALFATEH SECONDRAY SCHOOL(91.2%) 1998 </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:279.914154px;left:48.160000px"><nobr>Diploma : Associate Degree in Programming- Abha Technology college.(4.97 out of 5) 2004 </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:295.274170px;left:48.160000px"><nobr>Degree : Bachelor of Science in Computers, (B.S) Mcneese State University-USA 2012 </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:310.634186px;left:198.426682px"><nobr>Bachelor of computer engineering , Buridah Technology college(4.78 out of 5) - 2022 </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:341.031097px;left:47.520000px"><nobr>TECHNICAL PROFILE: </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:358.314117px;left:48.160000px"><nobr>Operating System : Dos 6.2, Windows 95, 98, 2000, NT, XP 03,07,10, UNIX (Red hat 7(default) ,Khali). </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:373.674194px;left:48.160000px"><nobr>Office : MS-Office LibreOffice for linux distributions . </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:389.194183px;left:48.160000px"><nobr>Languages : EXCELLENT “C”,”C++” “pl/sql”, HTML, VERYGOOD css, Java Script, VB-Script, java, c#. </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:404.554138px;left:197.466675px"><nobr>GOOD,python, ruby,assembly, ALMOST, I CAN READ ANY CODE IN ANY LANGUAGE. </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:419.914185px;left:48.160000px"><nobr>RDBMS : Oracle ,9,10,11g,12c,18c – MySql,- Sqlserver 2000 Database management and Recovery. </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:435.274170px;left:48.160000px"><nobr>CYBER SECURITY :Kali linux packages , Metasploit4, Wireshark,Burp suite .etc, member of HACKTHEBOX and CTF365. </nobr></span><span style="position:absolute;top:471.613342px;left:48.160000px"><nobr>TRAININGS: </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:487.297791px;left:55.360001px"><nobr>Training </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:558.017822px;left:55.360001px"><nobr>GSM </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:635.457764px;left:55.360001px"><nobr>Help disk </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:695.497803px;left:55.360001px"><nobr>Labs networking. </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:731.497803px;left:55.360001px"><nobr>English </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:749.097839px;left:55.360001px"><nobr>English </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:487.137817px;left:182.426682px"><nobr>Company </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:643.937744px;left:182.586639px"><nobr>Abha chamber </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:12.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:676.437378px;left:182.586639px"><nobr>International </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:12.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:694.997375px;left:182.586639px"><nobr>computer driving </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:12.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:713.557312px;left:182.586639px"><nobr>license ( ICDL ) </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:732.137878px;left:182.586639px"><nobr>Saudi British Center </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:749.097839px;left:182.586639px"><nobr>ESLI </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:487.137817px;left:330.306671px"><nobr>Description </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:505.194946px;left:354.146698px"><nobr>• N/W Planning &amp; Dimensioning of Cellular Network. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:520.394958px;left:354.146698px"><nobr>• Cell Planning, Cell Coverage, and Site selection. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:535.754944px;left:354.146698px"><nobr>• Establishment &amp; Requirements of Cell sites. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:551.114990px;left:354.306702px"><nobr>• Communication Tower Erection &amp; Planning. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:566.314941px;left:354.306702px"><nobr>• Data-links Spec’s for Cellular Network Communications. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:581.674927px;left:354.306702px"><nobr>• Common Channel Signaling No:7 (CCS7). </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:597.034912px;left:354.306702px"><nobr>• O&amp;M of Network Cell site. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:612.874939px;left:354.306702px"><nobr>• Project Management Processes &amp; Reporting Systems. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:628.874939px;left:354.306702px"><nobr>• Network Trouble shooting </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:644.714966px;left:354.306702px"><nobr>• HW/ SW maintenance. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:660.114990px;left:354.306702px"><nobr>• Network Administration. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:676.114990px;left:354.306702px"><nobr>• Preparing new networking labs in general organization for technical </nobr></span><span style="position:absolute;top:691.660889px;left:378.306702px"><nobr>education in the Asir region. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:731.474915px;left:354.306702px"><nobr>• </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:731.660828px;left:378.146698px"><nobr>Advanced English skills reading , writing, and communicating. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:748.755005px;left:354.306702px"><nobr>• English skills reading , writing , and communication.. </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:784.297852px;left:48.160000px"><nobr>TRAINING PROFILE: </nobr></span></span></p><p><span style="background:#FFC000;font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:817.897766px;left:48.160000px"><nobr>NUTEK INDIA LTD RAN Engineer Nokia-Lucent -KSA April 2018 to date </nobr></span><span style="position:absolute;top:853.104004px;left:48.160000px"><nobr>Responsibilities : Installation &amp; OA&amp;M of Nokia-Lucent equipment in GSM Network. </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:871.364502px;left:48.160000px"><nobr>Accountabilities : </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:872.647583px;left:192.986649px"><nobr>Provide Tier 1 Installation &amp; technical support for the Installation and O&amp;M team. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:904.941589px;left:96.031998px"><nobr>• </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:903.844482px;left:120.031998px"><nobr>Corrective Management: </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:920.461609px;left:168.026672px"><nobr>• O&amp;M of BTS &amp; Handling of Customer complaints on technical grounds. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:935.821594px;left:168.026672px"><nobr>• Liaison with DOT, site owners, vendors &amp; Co-ordinate with OMC for fault Analysis. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:951.181641px;left:168.026672px"><nobr>• Up-grade BTS to increase network load capacity. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:966.541565px;left:168.026672px"><nobr>• Loading of new version of BTS software for better network coverage &amp; System Back-Ups. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:983.021606px;left:96.031998px"><nobr>• </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:981.924500px;left:120.031998px"><nobr>Fault Management : </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:998.861572px;left:168.026672px"><nobr>• Maintenance &amp; Testing BTS, Trouble shooting &amp; change of Faulty HW. Rectify 13ghz, 15ghz &amp; 23ghz </nobr></span></span></p>','<div style="position:absolute;top:0.000000px;left:0.000000px"><nobr><img height="1056.000000" width="816.000000" src ="bgimg/bg00006.jpg"/></nobr></div><p><span style="background:#FFC000;font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:191.231125px;left:48.160000px"><nobr>GOTEVOT.EDU.SA S/W Programmer GOTEVOT 2005 to 2007 </nobr></span></span></p><p><span style="background:#FFC000;font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:381.351166px;left:64.160004px"><nobr>TYPSA.ES Project coordinator TYPSA GROUP 2023 to date </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:48.327473px;left:192.186661px"><nobr>Mini-links for radio outages, improve Bit Error Rate (BER) for transmission quality &amp; traffic statistics reports </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:64.621582px;left:96.031998px"><nobr>• </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:63.524414px;left:120.031998px"><nobr>Performance Management: </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:80.488281px;left:168.026672px"><nobr>• Evaluate performance &amp; Optimize GSM network. Monitor and Report performance of RAN elements. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:95.848305px;left:168.026672px"><nobr>• Generate &amp; review RAN performance element on National level accordance to GSM standard. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:111.208252px;left:168.026672px"><nobr>• Report GSM traffic usage &amp; blockage data. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:126.568275px;left:168.026672px"><nobr>• Monitor GSM quality of service (AIR Interface ) </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:142.248291px;left:168.026672px"><nobr>• H/W &amp; S/W Up gradations of the system &amp;Implementation of the CWO’s&amp; quality check. </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:157.311203px;left:48.160000px"><nobr>JOBS PROFILE: </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:224.831223px;left:48.160000px"><nobr>Responsibilities : </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:226.114182px;left:240.026672px"><nobr>PL/SQL PROGRAMMER &amp; ORACLE DATABASE . </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:241.471191px;left:48.160000px"><nobr>On Job Experience: </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:258.408295px;left:96.031998px"><nobr>• DB security and risk management regulate Backups of the systems. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:273.808258px;left:96.031998px"><nobr>• DB networking with Server and client consoles. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:289.168304px;left:96.031998px"><nobr>• DB programming for management and client query. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:304.688232px;left:96.031998px"><nobr>• Schema creations and Schema restores. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:320.048248px;left:96.031998px"><nobr>• Design BSS for client for extracting relevant data for Government agencies. </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:419.591156px;left:48.160000px"><nobr>Responsibilities : </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:420.874176px;left:240.026672px"><nobr>PROJECT COORDIANTOR AND DOCUMENTS CONTROLLER . </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:436.391174px;left:48.160000px"><nobr>On Job Experience: </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:453.328278px;left:96.031998px"><nobr>• Monitoring the daily progress of Shuibah 3 projects </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:468.554901px;left:96.031998px"><nobr>• Providing detailed updates to project managers or other stakeholders. </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:483.914917px;left:96.031998px"><nobr>• Organizing reports, invoices, contracts, and other financial files for easy access </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:499.274963px;left:96.031998px"><nobr>• Planning meetings and organizing project logistics </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:514.634949px;left:96.031998px"><nobr>• Performing billing and bookkeeping tasks </nobr></span></span></p><p><span style="font-family:Arial;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:529.994934px;left:96.031998px"><nobr>• Ordering necessary office supplies </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:545.697815px;left:48.160000px"><nobr>AWARDS &amp; ACCOMPLISHMENTS : </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:562.820862px;left:48.160000px"><nobr>I also have Abha Award for science Superiority for Year 1426H. </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:11.040000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:593.217834px;left:48.160000px"><nobr>STRENGTHS: </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:610.340881px;left:96.031998px"><nobr>I shall emphasize that in addition to GSM experience, I have always loved to work with servers and Programming </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:625.860840px;left:48.160000px"><nobr>&amp;capable of going through changes and keeping up good education and hard work. Good physic, Fast learning attitude, Willing to travel, </nobr></span><span style="position:absolute;top:641.220825px;left:48.160000px"><nobr>Flexibility to Work </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.960000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:656.780823px;left:48.160000px"><nobr>Non-Standard hours. </nobr></span></span></p><p><span style="font-family:Calibri;font-size:11.040000px;font-style:normal;font-weight:normal;color:#000000;"><span style="position:absolute;top:692.933350px;left:48.160000px"><nobr>REFERENCES: </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.000000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:708.961365px;left:55.360001px"><nobr>Mr . MOHAMMAD ALSHAHRANI </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.000000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:723.201355px;left:55.360001px"><nobr>SAUDI TELECOM COMPANY </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:737.121338px;left:55.360001px"><nobr>TECHNICAL ACCOUNTANT, South Region </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:750.881348px;left:55.360001px"><nobr>CALL: +966 558552550 </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:764.641357px;left:55.360001px"><nobr>Abha - Saudi Arabia </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.000000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:708.641296px;left:307.266663px"><nobr>ENG .MUHAMED MUBARAK </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.000000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:722.561340px;left:307.266663px"><nobr>SAUDI ELECTRICAL COMPANY </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:736.321411px;left:307.266663px"><nobr>Network Operations, South Region </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:750.081360px;left:307.266663px"><nobr>CALL:+966 507753003 </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:763.841309px;left:307.266663px"><nobr>Abha - Saudi Arabia </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.000000px;font-weight:bold;text-decoration:underline;color:#000000;"><span style="position:absolute;top:708.961365px;left:535.453369px"><nobr>Mr . SYED MOUGEESUDDIN QUADRI </nobr></span><span style="position:absolute;top:723.201355px;left:535.453369px"><nobr>ERICSSON SAUDI </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:736.961365px;left:535.453369px"><nobr>CORE IN/VAS SPECIALIST, South Region </nobr></span><span style="position:absolute;top:750.881348px;left:535.453369px"><nobr>CALL: +966 550735750 </nobr></span></span></p><p><span style="font-family:Times New Roman;font-size:9.000000px;font-weight:bold;color:#000000;"><span style="position:absolute;top:764.641357px;left:535.453369px"><nobr>Najran - Saudi Arabia </nobr></span></span></p>']
+            }
+        },
+        mounted: function() {
+            this.$nextTick(function() {
+                this.pageNum = this.pageDatas.length;
+                this.pageContent = this.pageDatas[0];
+
+                this.setLeftMenuHeight();
+            })
+        },
+        watch: {
+            'currentPage': function(newVal, oldValue) {
+                // console.log('newVal ' + newVal, 'oldValue ' + oldValue);
+                if (newVal) {
+                    this.pageContent = this.pageDatas[this.currentPage - 1];
+                }
+            },
+            'zoomNum': function(newVal, oldValue) {
+                if (newVal) {
+                    this.zoomStyle = {
+                        'transform': 'scale(' + newVal + ')',
+                        '-webkit-transform': 'scale(' + newVal + ')',
+                        '-ms-transform': 'scale(' + newVal + ')',
+                        '-moz-transform': 'scale(' + newVal + ')',
+                        '-o-transform': 'scale(' + newVal + ')'
+                    }
+                }
+            }
+        },
+        methods: {
+            
+            changeCurrentPage: function(methods) {
+                switch (methods) {
+                    case 'first':
+                        this.currentPage = 1;
+                        break;
+                    case 'prev':
+                        if (this.currentPage > 1) {
+                            this.currentPage -= 1;
+                        }
+                        break;
+                    case 'next':
+                        if (this.currentPage < this.pageNum) {
+                            this.currentPage += 1;
+                        }
+                        break;
+                    case 'last':
+                        this.currentPage = this.pageNum;
+                        break;
+                }
+            },
+
+            gotoPage: function(page) {
+                console.log(page);
+                this.currentPage = page;
+            },
+            modifyZoom: function(type) {
+                switch (type) {
+                    case 'in':
+                        if (this.zoomNum < 2) {
+                            // this.zoomNum = (this.zoomNum + 0.1).toFixed(1);
+                            this.zoomNum = (parseFloat(this.zoomNum) + 0.1).toFixed(1);
+                        }
+                        break;
+                    case 'out':
+                        if (this.zoomNum > 0.5) {
+                            this.zoomNum = (parseFloat(this.zoomNum) - 0.1).toFixed(1);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                console.log(this.zoomNum);
+            },
+            setLeftMenuHeight: function() {
+                // this.asideHeight = document.body.scrollHeight - 60;
+                this.mainHeight = document.documentElement.clientHeight - 60 - 20;
+                // 60为头部导航高度， 46为menu高度， 40为上下padding
+                this.asideHeight = this.mainHeight - 20 - 46;
+            },
+            changePage: function(page) {
+                this.currentPage = page;
+                // this.pageContent = this.pageDatas[page - 1];
+            },
+            changeLeftMenu: function() {
+                this.ifMenuShow = !this.ifMenuShow;
+            }
+        }
+    });
+
+function gotoPage(page) {
+    console.log(page);
+    app.gotoPage(page);
+}
+
+</script>
+
+</html>
